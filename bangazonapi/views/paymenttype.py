@@ -20,7 +20,7 @@ class PaymentSerializer(serializers.HyperlinkedModelSerializer):
             lookup_field='id'
         )
         fields = ('id', 'url', 'merchant_name', 'account_number',
-                  'expiration_date', 'create_date')
+                  'expiration_date', 'create_date', 'customer_id')
 
 
 class Payments(ViewSet):
@@ -78,8 +78,9 @@ class Payments(ViewSet):
             return Response({'message': ex.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def list(self, request):
-        """Handle GET requests to payment type resource"""
-        payment_types = Payment.objects.all()
+        """Handle GET requests to payment type resource specific to authenticated user""" 
+        
+        payment_types = Payment.objects.filter(customer__id=request.auth.user.id)
 
         customer_id = self.request.query_params.get('customer', None)
 
