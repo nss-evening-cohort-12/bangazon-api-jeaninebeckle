@@ -1,4 +1,5 @@
 """View module for handling requests about customer payment types"""
+import re
 from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -20,7 +21,7 @@ class PaymentSerializer(serializers.HyperlinkedModelSerializer):
             lookup_field='id'
         )
         fields = ('id', 'url', 'merchant_name', 'account_number',
-                  'expiration_date', 'create_date')
+                  'expiration_date', 'create_date', 'customer_id')
 
 
 class Payments(ViewSet):
@@ -78,10 +79,13 @@ class Payments(ViewSet):
             return Response({'message': ex.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def list(self, request):
-        """Handle GET requests to payment type resource"""
-        payment_types = Payment.objects.all()
+        """Handle GET requests to payment type resource""" 
+        current_user = request.auth.user.id 
+        
+        payment_types = Payment.objects.filter(customer__id=current_user)
 
         customer_id = self.request.query_params.get('customer', None)
+        # customer_id = request.auth.user
 
         if customer_id is not None:
             payment_types = payment_types.filter(customer__id=customer_id)
