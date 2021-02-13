@@ -242,12 +242,13 @@ class Products(ViewSet):
         """
         products = Product.objects.all()
 
-        # Support filtering by category and/or quantity
+        # Support filtering by category, price or quantity
         category = self.request.query_params.get('category', None)
         quantity = self.request.query_params.get('quantity', None)
         order = self.request.query_params.get('order_by', None)
         direction = self.request.query_params.get('direction', None)
         number_sold = self.request.query_params.get('number_sold', None)
+        price = self.request.query_params.get('min_price', None)
 
         if order is not None:
             order_filter = order
@@ -271,6 +272,14 @@ class Products(ViewSet):
                 return False
 
             products = filter(sold_filter, products)
+
+        if price is not None:
+            def price_filter(product):
+                if product.price >= float(price):
+                    return True
+                return False
+
+            products = filter(price_filter, products)       
 
 
         serializer = ProductSerializer(
