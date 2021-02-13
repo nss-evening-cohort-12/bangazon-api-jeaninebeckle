@@ -80,7 +80,7 @@ class Payments(ViewSet):
     def list(self, request):
         """Handle GET requests to payment type resource specific to authenticated user""" 
         
-        payment_types = Payment.objects.filter(customer__id=request.auth.user.id)
+        payment_types = Payment.objects.filter(customer__user=request.auth.user)
 
         customer_id = self.request.query_params.get('customer', None)
 
