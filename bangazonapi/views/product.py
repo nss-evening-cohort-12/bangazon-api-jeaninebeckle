@@ -9,6 +9,7 @@ from rest_framework import status
 from bangazonapi.models import Product, Customer, ProductCategory
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.db.models import Q
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -249,6 +250,7 @@ class Products(ViewSet):
         direction = self.request.query_params.get('direction', None)
         number_sold = self.request.query_params.get('number_sold', None)
         price = self.request.query_params.get('min_price', None)
+        location = self.request.query_params.get('location', None)
 
         if order is not None:
             order_filter = order
@@ -279,7 +281,12 @@ class Products(ViewSet):
                     return True
                 return False
 
-            products = filter(price_filter, products)       
+            products = filter(price_filter, products)      
+
+        if location is not None:
+            products = products.filter(
+                Q(location__contains=location)
+            ) 
 
 
         serializer = ProductSerializer(
