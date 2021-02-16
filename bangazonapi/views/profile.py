@@ -291,6 +291,11 @@ class Profile(ViewSet):
                 return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
         if request.method == "POST":
+            """Handle POST operations
+
+            Returns:
+                Response -- JSON serialized favorite instance
+            """
             try:
                 favorite = Favorite()
                 favorite.customer = current_user
