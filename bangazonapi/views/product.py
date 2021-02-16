@@ -10,6 +10,7 @@ from bangazonapi.models import Product, Customer, ProductCategory
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
+from rest_framework.decorators import action
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -292,3 +293,14 @@ class Products(ViewSet):
         serializer = ProductSerializer(
             products, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def liked(self, request):
+
+        if request.method == "GET": 
+            """Handle GET requests to liked products resource
+
+            Returns:
+                Response -- JSON serialized list of liked products
+            """
+        products = Product.objects.all()
