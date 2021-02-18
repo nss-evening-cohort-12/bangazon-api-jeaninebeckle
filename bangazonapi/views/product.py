@@ -1,15 +1,17 @@
 """View module for handling requests about products"""
 import base64
 from django.core.files.base import ContentFile
+from django.core.exceptions import ValidationError
 from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework import status
-from bangazonapi.models import Product, Customer, ProductCategory
+from bangazonapi.models import Product, Customer, ProductCategory, Liked
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
+from rest_framework.decorators import action
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -20,6 +22,13 @@ class ProductSerializer(serializers.ModelSerializer):
                   'quantity', 'created_date', 'location', 'image_path',
                   'average_rating', 'can_be_rated', 'category')
         depth = 1
+
+class LikedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Liked
+        fields = ('id', 'product')
+        depth = 2
 
 
 class Products(ViewSet):
@@ -292,3 +301,63 @@ class Products(ViewSet):
         serializer = ProductSerializer(
             products, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def liked(self, request):
+
+        """Handle GET requests to liked products resource
+
+        Returns:
+            Response -- JSON serialized list of liked products
+        """
+        customer = Customer.objects.get(user=request.auth.user)
+        liked = Liked.objects.filter(customer=customer)
+
+        serializer = LikedSerializer(
+            liked, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(methods=['post', 'delete'], detail=True)
+    def like(self, request, pk=None):
+
+        current_product = Product.objects.get(pk=pk)
+        current_customer = Customer.objects.get(user=request.auth.user)
+
+        if request.method == "DELETE":
+            """Handle DELETE requests for a single liked product
+
+            Returns:
+                Response -- 200, 404, or 500 status code
+            """
+
+            try: 
+                like = Liked.objects.get(customer=current_customer, product=current_product)
+                like.delete()
+
+                return Response({}, status=status.HTTP_204_NO_CONTENT)
+            
+            except Liked.DoesNotExist as ex:
+                return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
+
+            except Exception as ex:
+                return Response({'message': ex.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if request.method == "POST":
+
+            """Handle POST operations
+
+            Returns:
+                Response -- JSON serialized liked product instance
+            """
+
+            try:
+                liked = Liked()
+                liked.customer = current_customer
+                liked.product = current_product
+                liked.save()
+
+                serializer = LikedSerializer(liked, context={'request': request})
+                return Response(serializer.data)
+
+            except ValidationError as ex:
+                return Response({"reason": ex.message}, status=status.HTTP_400_BAD_REQUEST)               
