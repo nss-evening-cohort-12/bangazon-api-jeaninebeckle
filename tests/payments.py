@@ -1,3 +1,4 @@
+from bangazonapi.models.payment import Payment
 import datetime
 import json
 from rest_framework import status
@@ -40,4 +41,22 @@ class PaymentTests(APITestCase):
         self.assertEqual(json_response["expiration_date"], "2024-12-31")
         self.assertEqual(json_response["create_date"], str(datetime.date.today()))
 
-    # TODO: Delete payment type
+    def test_delete_payment_type(self):
+        """
+        Ensure we can delete an existing payment type.
+        """
+        payment = Payment()
+        payment.merchant_name = "Visa"
+        payment.account_number = "90sdjrps"
+        payment.customer_id = 1
+        payment.expiration_date = "2023-06-30"
+        payment.create_date = "2021-02-18"
+        payment.save()
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.delete(f"/paymenttypes/{payment.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # GET PAYMENT AGAIN TO VERIFY 404 response
+        response = self.client.get(f"/paymenttypes/{payment.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
