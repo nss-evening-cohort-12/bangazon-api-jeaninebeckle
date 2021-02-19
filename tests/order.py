@@ -1,3 +1,4 @@
+from bangazonapi.models.order import Order
 import json
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -29,6 +30,12 @@ class OrderTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+        # Create a payment type
+        url = "/paymenttypes"
+        data = { "merchant_name": "Visa", "account_number": "90sdjrps", "create_date": "2021-02-18", "customer_id": 1, "expiration_date": "2023-06-30" }
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_product_to_order(self):
         """
@@ -79,6 +86,36 @@ class OrderTests(APITestCase):
         self.assertEqual(json_response["size"], 0)
         self.assertEqual(len(json_response["lineitems"]), 0)
 
-    # TODO: Complete order by adding payment type
+
+    def test_add_payment_type_to_order(self):
+        """
+        Ensure we can add a payment type to an order.
+        """
+        # Add product to order
+        url = "/profile/cart"
+        data = { "product_id": 1 }
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        #Add payment type to order
+        url = "/orders/1"
+        data = { "payment_type": 1 }
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.put(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Get order and verify payment type was added
+        url = "/orders/1"
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.get(url, None, format='json')
+        json_response = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json_response["payment_type"], 1)
+        self.assertEqual(len(json_response["lineitems"]), 1)
+
 
     # TODO: New line item is not added to closed order
