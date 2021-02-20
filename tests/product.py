@@ -121,4 +121,51 @@ class ProductTests(APITestCase):
 
 
 
-    # TODO: Product can be rated. Assert average rating exists.
+    def test_add_rating_to_product(self):
+        """
+        Ensure we can add a rating to an existing product.
+        """           
+        #create a product
+        product = Product()
+        product.name = "Soccer ball"
+        product.customer_id = 1
+        product.price = 10
+        product.description = "Round and kickable"
+        product.quantity = 5
+        product.category_id = 1
+        product.location = "Chicago"
+        product.save()
+
+        #create a second user (to add multiple ratings in order to verify average)
+
+        url = "/register"
+        data = {"username": "jeanine", "password": "Admin8*", "email": "jb@jb.com",
+                "address": "100 Infinity Way", "phone_number": "555-1212", "first_name": "Jeanine", "last_name": "Beckley"}
+        response = self.client.post(url, data, format='json')
+        json_response = json.loads(response.content)
+        self.token2 = json_response["token"]
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        #rate product twice
+
+        url = "/products/1/rating"
+        data = { "rating": 2 }
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        url = "/products/1/rating"
+        data = { "rating": 4 }
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token2)
+        response = self.client.post(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Get product and verify ratings were added and average rating is calculating
+        url = "/products/1"
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.get(url, None, format='json')
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json_response["average_rating"], 3)

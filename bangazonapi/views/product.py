@@ -7,7 +7,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework import status
-from bangazonapi.models import Product, Customer, ProductCategory, Liked
+from bangazonapi.models import Product, Customer, ProductCategory, Liked, ProductRating
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
@@ -24,12 +24,16 @@ class ProductSerializer(serializers.ModelSerializer):
         depth = 1
 
 class LikedSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Liked
         fields = ('id', 'product')
         depth = 2
 
+class ProductRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductRating
+        fields = ('id', 'rating')
+        depth = 2
 
 class Products(ViewSet):
     """Request handlers for Products in the Bangazon Platform"""
@@ -364,3 +368,16 @@ class Products(ViewSet):
 
             except ValidationError as ex:
                 return Response({"reason": ex.message}, status=status.HTTP_400_BAD_REQUEST)               
+
+    @action(methods=['post'], detail=True)
+    def rating(self, request, pk=None):
+
+        rating = ProductRating()
+
+        rating.product = Product.objects.get(pk=pk)
+        rating.customer = Customer.objects.get(user=request.auth.user)
+        rating.rating = request.data["rating"]
+        rating.save()
+
+        serializer = ProductRatingSerializer(rating, context={'request': request})
+        return Response(serializer.data)
