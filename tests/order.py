@@ -92,15 +92,10 @@ class OrderTests(APITestCase):
         Ensure we can add a payment type to an order.
         """
         # Add product to order
-        url = "/profile/cart"
-        data = { "product_id": 1 }
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
-        response = self.client.post(url, data, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.test_add_product_to_order()
 
         #Add payment type to order
-        url = "/orders/1"
+        url = "/profile/cart"
         data = { "payment_type": 1 }
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
         response = self.client.put(url, data, format='json')
@@ -117,4 +112,30 @@ class OrderTests(APITestCase):
         self.assertEqual(len(json_response["lineitems"]), 1)
 
 
-    # TODO: New line item is not added to closed order
+
+    def test_item_added_open_order(self):
+        """
+        Ensure items are not being added to closed orders
+        """
+
+        #add product and payment type to order, which closes order
+        self.test_add_payment_type_to_order
+
+        # Add product to new order
+        url = "/profile/cart"
+        data = { "product_id": 1 }
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Get cart and verify product was added to new order
+        url = "/profile/cart"
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        response = self.client.get(url, None, format='json')
+        json_response = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json_response["id"], 2)
+        self.assertEqual(json_response["size"], 1)
+        self.assertEqual(len(json_response["lineitems"]), 1)
