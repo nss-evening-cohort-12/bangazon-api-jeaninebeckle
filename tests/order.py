@@ -112,9 +112,8 @@ class OrderTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
         response = self.client.get(url, None, format='json')
         json_response = json.loads(response.content)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json_response["payment_type"], 1)
+        self.assertEqual(json_response["payment_type"], 'http://testserver/paymenttypes/1')
         self.assertEqual(len(json_response["lineitems"]), 1)
 
 
