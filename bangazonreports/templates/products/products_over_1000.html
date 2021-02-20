@@ -8,11 +8,11 @@
   <body>
     <h1>Products Priced at $1000 or Higher</h1>
 
-    {% for product in productprice_list %}
+    {% for product in highproductprice_list %}
 
             <ul>
                 Name: {{ product.name }} <br>
-                Description: {{ product.description }}
+                Description: {{ product.description }}<br>
                 Price: {{ product.price }}
             </ul>
             {% endfor %}

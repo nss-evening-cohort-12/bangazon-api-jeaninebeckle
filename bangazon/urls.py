@@ -29,4 +29,4 @@ urlpatterns = [
     url(r'^api-token-auth$', obtain_auth_token),
     url(r'^api-auth', include('rest_framework.urls', namespace='rest_framework')),
     path('', include('bangazonreports.urls'))
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
