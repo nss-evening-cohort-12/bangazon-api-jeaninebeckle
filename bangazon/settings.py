@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'bangazonapi',
     'safedelete',
+    'bangazonreports',
 ]
 
 REST_FRAMEWORK = {
