@@ -65,7 +65,7 @@ class Product(SafeDeleteModel):
             for rating in ratings:
                 total_rating += rating.rating
             # Calculate the averge and return it.
-            avg = total_rating / len(ratings)
+            avg = round(total_rating / len(ratings),2)
             return avg
 
         return 0
