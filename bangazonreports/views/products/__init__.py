@@ -1,1 +1,2 @@
 from .productsoveronethousand import highproductprice_list
+from .productsunder1000 import lowproductprice_list
